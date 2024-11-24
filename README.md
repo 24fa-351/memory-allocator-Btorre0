@@ -14,7 +14,7 @@ Testing is critical for this project. Consider allocation patterns (small, then 
 
 Write these first as a test cases document, then implement a test program that includes all the tests. The test program should execute all tests unless a “-t num” option is present, in which case just that single test is executed. Obviously, output the name of the test and a pass/fail. It’s strongly suggested that each test is a function.
 
-It’s strongly suggested that you write this with “normal” malloc before you start work on your version. Extend this as you find new things to test.
+It's strongly suggested that you write this with “normal” malloc before you start work on your version. Extend this as you find new things to test.
 
 You may have several test programs that you write and use. That’s great, but do check in this big one.
 
