@@ -1,12 +1,12 @@
 #ifndef ALLOCATOR_H
 #define ALLOCATOR_H
 
-#include <pthread.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-typedef struct {
+#include <unistd.h>
+#include <pthread.h>
+typedef struct mem_block{
     size_t size;
     int free;
     struct mem_block *next;
