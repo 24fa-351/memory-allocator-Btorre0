@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 typedef struct mem_block{
     size_t size;
     int free;
@@ -13,6 +14,7 @@ typedef struct mem_block{
 } mem_block_t;
 
 static mem_block_t *find_free_block(size_t size);
+void* get_me_blocks( ssize_t how_much );
 static void split_block(mem_block_t *block, size_t size);
 
 void allocator_init(size_t size);

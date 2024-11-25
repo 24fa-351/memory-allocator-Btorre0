@@ -15,6 +15,12 @@ static mem_block_t *find_free_block(size_t size) {
     return NULL;
 }
 
+void* get_me_blocks(ssize_t how_much) {
+    void* ptr = sbrk(0);
+    sbrk(how_much);
+    return ptr;
+}
+
 static void split_block(mem_block_t *block, size_t size) {
     mem_block_t *new_block =
         (mem_block_t *)((char *)block + sizeof(mem_block_t) + size);
@@ -27,10 +33,9 @@ static void split_block(mem_block_t *block, size_t size) {
 }
 
 void allocator_init(size_t size) {
-    pthread_mutex_t lock;
-    pthread_mutex_init(&lock, NULL);
-    base = sbrk(size);
-    pthread_mutex_destroy(&lock);
+    pthread_mutex_lock(&allocator_mutex);
+    base = sbrk(0); // im getting a warning (because of my computerrr)
+
     if (base == (void *)-1) {
         fprintf(stderr, "Failed to allocate memory\n");
         pthread_mutex_unlock(&allocator_mutex);
@@ -50,8 +55,9 @@ void *allocator_malloc(size_t size) {
     if (size <= 0) {
         return NULL;
     }
+
     pthread_mutex_lock(&allocator_mutex);
-    mem_block_t *block = free;
+    mem_block_t *block = find_free_block(size);
 
     while (block) {
         if (block->free && block->size >= size) {
@@ -91,16 +97,19 @@ void *allocator_realloc(void *ptr, size_t size) {
         return ptr;
     }
     void *new_ptr = allocator_malloc(size);
+
     if (new_ptr == NULL) {
         return NULL;
     }
+
     memcpy(new_ptr, ptr, block->size);
     allocator_free(ptr);
+
     return new_ptr;
 }
 
 void allocator_cleanup() {
-    brk(base);
+    // sbrk(base);
     pthread_mutex_destroy(&allocator_mutex);
     free_list = NULL;
     base = NULL;
