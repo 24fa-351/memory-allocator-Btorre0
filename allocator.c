@@ -18,6 +18,41 @@ static mem_block_t *find_free_block(size_t size) {
     return NULL;
 }
 
+void allocator_cleanup() {
+    pthread_mutex_lock(&allocator_mutex);
+    free_list = NULL;
+    base = NULL;
+    pthread_mutex_unlock(&allocator_mutex);
+    pthread_mutex_destroy(&allocator_mutex);
+}
+
+void *get_me_blocks(ssize_t how_much) {
+    if (how_much <= 0) {
+        fprintf(stderr, "Invalid size\n", how_much);
+        return NULL;
+    }
+
+    pthread_mutex_lock(&allocator_mutex);
+
+    void *ptr = sbrk(0);
+
+    if (ptr == (void *)-1) {
+        perror("sbrk failed to get current break");
+        pthread_mutex_unlock(&allocator_mutex);
+        return NULL;
+    }
+
+    if (sbrk(how_much) == (void *)-1) {
+        perror("sbrk failed to increase break");
+        pthread_mutex_unlock(&allocator_mutex);
+        return NULL;
+    }
+
+    pthread_mutex_unlock(&allocator_mutex);
+    sbrk(how_much);
+    return ptr;
+}
+
 static void split_block(mem_block_t *block, size_t size) {
     if (block->size > size + sizeof(mem_block_t)) {
         mem_block_t *new_block =
@@ -38,7 +73,7 @@ void allocator_init(size_t size) {
     }
 
     pthread_mutex_lock(&allocator_mutex);
-    // base = get_me_blocks(size);
+    base = get_me_blocks(size);
     pthread_mutex_lock(&allocator_mutex);
     if (size < sizeof(mem_block_t)) {
         fprintf(stderr, "Initialization size too small\n");
@@ -119,37 +154,3 @@ void *allocator_realloc(void *ptr, size_t size) {
     return new_ptr;
 }
 
-void allocator_cleanup() {
-    pthread_mutex_lock(&allocator_mutex);
-    free_list = NULL;
-    base = NULL;
-    pthread_mutex_unlock(&allocator_mutex);
-    pthread_mutex_destroy(&allocator_mutex);
-}
-
-// void *get_me_blocks(ssize_t how_much) {
-//     if (how_much <= 0) {
-//         fprintf(stderr, "Invalid size\n", how_much);
-//         return NULL;
-//     }
-
-//     pthread_mutex_lock(&allocator_mutex);
-
-//     void *ptr = sbrk(0);
-
-//     if (ptr == (void *)-1) {
-//         perror("sbrk failed to get current break");
-//         pthread_mutex_unlock(&allocator_mutex);
-//         return NULL;
-//     }
-
-//     if (sbrk(how_much) == (void *)-1) {
-//         perror("sbrk failed to increase break");
-//         pthread_mutex_unlock(&allocator_mutex);
-//         return NULL;
-//     }
-
-//     pthread_mutex_unlock(&allocator_mutex);
-//     // sbrk(how_much);
-//     return ptr;
-// }

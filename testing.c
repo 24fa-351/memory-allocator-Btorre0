@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <string.h>
 
@@ -81,41 +79,41 @@ void merging_test() {
     allocator_cleanup();
 }
 
+#define NUM_THREADS 10
+
+void* thread_worker(void *arg) {
+    int *num = (int *)arg;
+    printf("Thread %d\n", *num);
+    free(num);
+    return NULL;
+}
+
+void thread_test() {
+    allocator_init(1024);
+    pthread_t threads[NUM_THREADS];
+
+    for (int ix = 0; ix < NUM_THREADS; ix++) {
+        int *arg = (int *)allocator_malloc(sizeof(int));
+        if (arg == NULL) {
+            printf("Failed to allocate memory\n");
+            exit(1);
+        }
+        *arg = ix;
+        pthread_create(&threads[ix], NULL, thread_worker, arg);
+    }
+
+    for (int ix = 0; ix < NUM_THREADS; ix++) {
+        pthread_join(threads[ix], NULL);
+    }
+
+    allocator_cleanup();
+}
+
 int main(int argc, char *argv[]) {
     malloc_free_test();
     realloc_test();
     merging_test();
-    // thread_test();
+    thread_test();
 
     return 0;
 }
-
-// #define NUM_THREADS 10
-
-// void* thread_worker(void *arg) {
-//     int *num = (int *)arg;
-//     printf("Thread %d\n", *num);
-//     free(num);
-//     return NULL;
-// }
-
-// void thread_test() {
-//     allocator_init(1024);
-//     pthread_t threads[NUM_THREADS];
-
-//     for (int ix = 0; ix < NUM_THREADS; ix++) {
-//         int *arg = malloc(sizeof(int));
-//         if (arg == NULL) {
-//             printf("Failed to allocate memory\n");
-//             exit(1);
-//         }
-//         *arg = ix;
-//         pthread_create(&threads[i], NULL, thread_worker, arg);
-//     }
-
-//     for (int ix = 0; ix < NUM_THREADS; ix++) {
-//         pthread_join(threads[ix], NULL);
-//     }
-
-//     allocator_cleanup();
-// }
